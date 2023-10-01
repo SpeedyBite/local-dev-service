@@ -39,3 +39,15 @@ func GetAbsDirectory(dir string) (string, error) {
 
 	return path, nil
 }
+
+func WriteFile(name string, content []byte) error {
+	if _, err := os.Stat(name); err == nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(name, content, 0644)
+}
