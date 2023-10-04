@@ -1,9 +1,10 @@
-package loader
+package vault
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	vault "github.com/hashicorp/vault/api"
 )
@@ -22,8 +23,7 @@ func NewVault(server string) *Vault {
 		log.Fatalf("unable to initialize Vault client: %v", err)
 	}
 
-	// token := os.Getenv("GITHUB_TOKEN")
-	token := "s.ELQRMaAfkFCi7ZOTuS0gghgZ" //os.Getenv("VAULT_TOKEN")
+	token := os.Getenv("VAULT_TOKEN")
 	client.SetToken(token)
 
 	return &Vault{
@@ -37,6 +37,5 @@ func (vault *Vault) GetVaults(environment string, serviceName string) (*vault.KV
 	if err != nil {
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}
-	fmt.Printf("%+v\n", secret.Data)
 	return secret, nil
 }

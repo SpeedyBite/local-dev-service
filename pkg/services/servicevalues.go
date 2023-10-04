@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"log"
@@ -17,27 +17,23 @@ var (
 	supportPortMappingRegex = regexp.MustCompile(`\d+:\d+`)
 )
 
-type Dependencies map[string]string
-
 type ServiceValues struct {
 	Image            string `yaml:"image"`
 	Ports            []string
-	links            []string
-	debugPorts       map[string]int          `yaml:"debugPorts,omitempty"`
-	dependencies     map[string]Dependencies `yaml:"dependencies,omitempty"`
-	requiredDatabase bool                    `yaml:"requiredDatabase,omitempty"`
-	requiredRedis    bool                    `yaml:"requiredRedis,omitempty"`
-	requiredRabbitMQ bool                    `yaml:"requiredRabbitMQ,omitempty"`
+	Links            []string       `yaml:"links"`
+	DebugPorts       map[string]int `yaml:"debugPorts,omitempty"`
+	requiredDatabase bool           `yaml:"requiredDatabase"`
+	requiredRedis    bool           `yaml:"requiredRedis"`
+	requiredRabbitMQ bool           `yaml:"requiredRabbitMQ"`
 }
 
-func CreateSericeValues(image string, ports []string, links []string) *ServiceValues {
+func CreateSericeValues(sc *ServiceConfig) *ServiceValues {
 	serviceValues := ServiceValues{
-		Image: image,
-		Ports: ports,
-		links: links,
+		Image: sc.Image,
+		Ports: sc.Ports,
+		Links: sc.Links,
 	}
-	serviceValues.debugPorts = serviceValues.getDebugPorts()
-	serviceValues.dependencies = serviceValues.getDependencies()
+	serviceValues.DebugPorts = serviceValues.getDebugPorts()
 	serviceValues.requiredDatabase = serviceValues.isRequiredDatabase()
 	serviceValues.requiredRedis = serviceValues.isRequiredRedis()
 	serviceValues.requiredRabbitMQ = serviceValues.isRequiredRabbitMQ()
@@ -82,29 +78,29 @@ func (s *ServiceValues) getDebugPorts() map[string]int {
 	return config
 }
 
-func (s *ServiceValues) getDependencies() map[string]Dependencies {
-	ignoreLinks := []string{"mysql", "redis", "rabbitmq"}
-	config := make(map[string]Dependencies)
-	for _, environment := range Environments {
-		dependencies := Dependencies{}
-		for _, link := range s.links {
-			isIgnored := arrayutils.Some(ignoreLinks, func(ignoreLink string) bool { return ignoreLink == link })
-			if !isIgnored {
-				dependencies[link] = BuildServiceDomain(environment, link)
-			}
-		}
-	}
-	return config
-}
+// func (s *ServiceValues) getDependencies() map[string]Dependencies {
+// 	ignoreLinks := []string{"mysql", "redis", "rabbitmq"}
+// 	config := make(map[string]Dependencies)
+// 	for _, environment := range Environments {
+// 		dependencies := Dependencies{}
+// 		for _, link := range s.links {
+// 			isIgnored := arrayutils.Some(ignoreLinks, func(ignoreLink string) bool { return ignoreLink == link })
+// 			if !isIgnored {
+// 				dependencies[link] = BuildServiceDomain(environment, link)
+// 			}
+// 		}
+// 	}
+// 	return config
+// }
 
 func (s *ServiceValues) isRequiredDatabase() bool {
-	return arrayutils.Some(s.links, func(link string) bool { return link == "mysql" })
+	return arrayutils.Some(s.Links, func(link string) bool { return link == "mysql" })
 }
 
 func (s *ServiceValues) isRequiredRedis() bool {
-	return arrayutils.Some(s.links, func(link string) bool { return link == "redis" })
+	return arrayutils.Some(s.Links, func(link string) bool { return link == "redis" })
 }
 
 func (s *ServiceValues) isRequiredRabbitMQ() bool {
-	return arrayutils.Some(s.links, func(link string) bool { return link == "rabbitmq" })
+	return arrayutils.Some(s.Links, func(link string) bool { return link == "rabbitmq" })
 }

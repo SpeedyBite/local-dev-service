@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"log"
@@ -17,15 +17,16 @@ var (
 )
 
 const (
-	dest                       = "docker-services"
-	ServiceDefinedFileNames    = "services.yaml"
-	ValuesfileName             = "values.yaml"
-	ServiceConnectionsFileName = "service-connections.yaml"
+	dest                          = "docker-services"
+	ServiceDefinedFileNames       = "services.yaml"
+	ValuesfileName                = "values.yaml"
+	ServiceDockerTemplateFileName = "docker-compose.yaml.tpl"
+	ServiceConnectionsFileName    = "service-connections.yaml"
 )
 
 type ServiceConfig struct {
-	Image       string   `yaml:"image"`
-	Environment []string `yaml:"environment,omitempty"`
+	Image       string   `yaml:"image,omitempty"`
+	Environment []string `yaml:"environment,omitempty"` // Environments variables
 	Ports       []string `yaml:"ports,omitempty"`
 	Volumes     []string `yaml:"volumes,omitempty"`
 	Networks    []string `yaml:"networks,omitempty"`
@@ -79,10 +80,10 @@ func findDockerComposeFile(path string) (string, error) {
 	return "", errors.Errorf("no docker-compose file found in %s", path)
 }
 
-func (dc *DockerComposeConfig) CreateLocalEnv() (string, error) {
+func (dc *DockerComposeConfig) createLocalEnv() (string, error) {
 	path := dc.directory
 	for serviceName, service := range dc.Services {
-		environmentFilePath := filepath.Join(path, dest, ".env", serviceName, "local.env")
+		environmentFilePath := filepath.Join(path, dest, serviceName, "local.env")
 
 		content := strings.Join(service.Environment, "\n")
 
@@ -94,21 +95,26 @@ func (dc *DockerComposeConfig) CreateLocalEnv() (string, error) {
 	return path, nil
 }
 
-// func (dc *DockerComposeConfig) CreateValues() (string, error) {
-// 	path := dc.directory
-// 	valuesFilePath := filepath.Join(path, dest, ValuesfileName)
+func (dc *DockerComposeConfig) CreateValues() error {
+	path := dc.directory
+	for serviceName, service := range dc.Services {
+		serviceValueFilePath := filepath.Join(path, dest, serviceName, ValuesfileName)
+		serviceValues := CreateSericeValues(&service)
 
-// 	content := `environmentFiles:
-// 	- .env/local.env
-// `
-// 	if err := utils(valuesFilePath, []byte(content)); err != nil {
-// 		log.Fatal("could not write file: ", err)
-// 		return "", err
-// 	}
-// 	return path, nil
-// }
+		if (serviceValues) == nil {
+			log.Fatal("could not create service values: ", serviceName)
+			return errors.Errorf("could not create service values: %s", serviceName)
+		}
 
-func (dc *DockerComposeConfig) CreateServiceConnections() error {
+		if err := serviceValues.DumpYamlTo(serviceValueFilePath); (err) != nil {
+			log.Fatal("could not marshal service values: ", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (dc *DockerComposeConfig) createServiceConnections() error {
 	serviceConnection := make(map[string]interface{})
 	for serviceName := range dc.Services {
 		// Skip non-payfare services such as mysql, redis, rabbitmq
@@ -138,13 +144,18 @@ func (dc *DockerComposeConfig) CreateServiceConnections() error {
 }
 
 // Read docker-compose.yml file and create all local environment files
-func CreateLocalEnv(dir string) (string, error) {
+func Create(dir string) (string, error) {
 	dockerComposeConfig, err := LoadServiceConfig(dir)
 	if err != nil {
 		return "", err
 	}
-	if err := dockerComposeConfig.CreateServiceConnections(); err != nil {
+
+	if err := dockerComposeConfig.CreateValues(); err != nil {
 		return "", err
 	}
-	return dockerComposeConfig.CreateLocalEnv()
+
+	if err := dockerComposeConfig.createServiceConnections(); err != nil {
+		return "", err
+	}
+	return dockerComposeConfig.createLocalEnv()
 }
