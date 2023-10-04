@@ -118,7 +118,7 @@ func (dc *DockerComposeConfig) createServiceConnections() error {
 	serviceConnection := make(map[string]interface{})
 	for serviceName := range dc.Services {
 		// Skip non-payfare services such as mysql, redis, rabbitmq
-		if arrayutils.Some(NonPayfareServices, func(service string) bool { return service == serviceName }) {
+		if arrayutils.Some(StorageServices, func(service string) bool { return service == serviceName }) {
 			continue
 		}
 		for _, environment := range Environments {

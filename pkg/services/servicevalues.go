@@ -78,21 +78,6 @@ func (s *ServiceValues) getDebugPorts() map[string]int {
 	return config
 }
 
-// func (s *ServiceValues) getDependencies() map[string]Dependencies {
-// 	ignoreLinks := []string{"mysql", "redis", "rabbitmq"}
-// 	config := make(map[string]Dependencies)
-// 	for _, environment := range Environments {
-// 		dependencies := Dependencies{}
-// 		for _, link := range s.links {
-// 			isIgnored := arrayutils.Some(ignoreLinks, func(ignoreLink string) bool { return ignoreLink == link })
-// 			if !isIgnored {
-// 				dependencies[link] = BuildServiceDomain(environment, link)
-// 			}
-// 		}
-// 	}
-// 	return config
-// }
-
 func (s *ServiceValues) isRequiredDatabase() bool {
 	return arrayutils.Some(s.Links, func(link string) bool { return link == "mysql" })
 }
