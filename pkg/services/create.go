@@ -20,9 +20,41 @@ const (
 	dest                          = "docker-services"
 	ServiceDefinedFileNames       = "services.yaml"
 	ValuesfileName                = "values.yaml"
+	HelperfileName                = "helpers.tpl"
+	ServiceTemplateFileName       = "service.yaml.tpl"
 	ServiceDockerTemplateFileName = "docker-compose.yaml.tpl"
 	ServiceConnectionsFileName    = "service-connections.yaml"
 )
+
+const defaultServiceHelperTemplate = `
+{{- define "<SERVICENAME>.environment" -}}
+{{- range $k, $v := .Environment -}}
+- {{ $k }}={{ $v }}
+{{- end -}}
+{{- end -}}
+`
+
+const defaultServiceTemplate = `
+version: "3.7"
+services:
+  {{ .Name }}:
+		enviroments:
+			{{- template "<SERVICENAME>.environment" . }}
+		ports:
+			{{- range $_, $v := .DebugPorts -}}
+			- {{ $v }}:{{ $v }}
+			- {{ $v }}:{{ $v }}
+			{{- end -}}
+		{{- if .Command }}
+		command: {{ .Command }}
+		{{- end }}
+`
+const couldNotWriteFileMessage = "could not write file:"
+
+func couldNotWriteFile(err error) {
+	log.Fatal(couldNotWriteFileMessage, err)
+	utils.PrintError(couldNotWriteFileMessage)
+}
 
 type ServiceConfig struct {
 	Image       string   `yaml:"image,omitempty"`
@@ -88,7 +120,19 @@ func (dc *DockerComposeConfig) createLocalEnv() (string, error) {
 		content := strings.Join(service.Environment, "\n")
 
 		if err := utils.WriteFile(environmentFilePath, []byte(content)); err != nil {
-			log.Fatal("could not write file: ", err)
+			couldNotWriteFile(err)
+			continue
+		}
+		helpFilePath := filepath.Join(path, dest, serviceName, HelperfileName)
+		helpContent := transform(defaultServiceHelperTemplate, serviceName)
+		if err := utils.WriteFile(helpFilePath, []byte(helpContent)); err != nil {
+			couldNotWriteFile(err)
+			continue
+		}
+		serviceFilePath := filepath.Join(path, dest, serviceName, ServiceTemplateFileName)
+		serviceTemplateContent := transform(defaultServiceTemplate, serviceName)
+		if err := utils.WriteFile(serviceFilePath, []byte(serviceTemplateContent)); err != nil {
+			couldNotWriteFile(err)
 			continue
 		}
 	}
@@ -141,6 +185,10 @@ func (dc *DockerComposeConfig) createServiceConnections() error {
 	}
 
 	return utils.WriteFile(serviceConnectionsFilePath, content)
+}
+
+func transform(src, replacement string) []byte {
+	return []byte(strings.ReplaceAll(src, "<SERVICENAME>", replacement))
 }
 
 // Read docker-compose.yml file and create all local environment files

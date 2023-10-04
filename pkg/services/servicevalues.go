@@ -18,9 +18,9 @@ var (
 )
 
 type ServiceValues struct {
-	Image            string `yaml:"image"`
-	Ports            []string
-	Links            []string       `yaml:"links"`
+	Descritpion      string   `yaml:"description"`
+	Links            []string `yaml:"links"`
+	ports            []string
 	DebugPorts       map[string]int `yaml:"debugPorts,omitempty"`
 	requiredDatabase bool           `yaml:"requiredDatabase"`
 	requiredRedis    bool           `yaml:"requiredRedis"`
@@ -29,9 +29,9 @@ type ServiceValues struct {
 
 func CreateSericeValues(sc *ServiceConfig) *ServiceValues {
 	serviceValues := ServiceValues{
-		Image: sc.Image,
-		Ports: sc.Ports,
-		Links: sc.Links,
+		Links:       sc.Links,
+		Descritpion: "Service Description",
+		ports:       sc.Ports,
 	}
 	serviceValues.DebugPorts = serviceValues.getDebugPorts()
 	serviceValues.requiredDatabase = serviceValues.isRequiredDatabase()
@@ -51,7 +51,7 @@ func (s *ServiceValues) DumpYamlTo(filepath string) error {
 
 // Get the first host post which is bigger than 10000
 func (s *ServiceValues) getAppProxyPort() (int, error) {
-	for _, portMapping := range s.Ports {
+	for _, portMapping := range s.ports {
 		if !supportPortMappingRegex.MatchString(portMapping) {
 			log.Printf("Port mapping %s is not supported", portMapping)
 			continue
