@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/RobDoan/go-docker-template/pkg/utils"
 )
 
 type DatabaseConfig struct {
@@ -27,6 +29,8 @@ func CopyDatabase(target *DatabaseConfig, source *DatabaseConfig) error {
 	tempDir := os.TempDir()
 	dumpFileName := filepath.Join(tempDir, "dump.sql")
 	// Dump the remote database to a file
+	command := fmt.Sprintf("mysqldump -u%s -p%s -h%s %s > %s", source.User, source.Password, source.Host, source.Name, dumpFileName)
+	utils.PrintInfo(command)
 	dumpCmd := exec.Command("mysqldump", "-u"+source.User, "-p"+source.Password, "-h"+source.Host, source.Name, "> "+dumpFileName)
 	if err := dumpCmd.Run(); err != nil {
 		fmt.Println("Error dumping remote database:", err)

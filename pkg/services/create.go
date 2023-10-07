@@ -27,9 +27,9 @@ const (
 )
 
 const defaultServiceHelperTemplate = `
-{{- define "<SERVICENAME>.environment" -}}
-{{- range $k, $v := .Environment -}}
-- {{ $k }}={{ $v }}
+{{- define "gibson.environment" -}}
+{{- range $k, $v := .Environment }}
+{{ print "- " $k "=" $v | indent 6}}
 {{- end -}}
 {{- end -}}
 `
@@ -38,15 +38,11 @@ const defaultServiceTemplate = `
 version: "3.7"
 services:
   {{ .Name }}:
-		enviroments:
-			{{- template "<SERVICENAME>.environment" . }}
-		ports:
-			{{- range $_, $v := .DebugPorts -}}
-			- {{ $v }}:{{ $v }}
-			- {{ $v }}:{{ $v }}
-			{{- end -}}
-		{{- if .Command }}
-		command: {{ .Command }}
+    enviroment:
+      {{- template "gibson.environment" .}}
+    ports:
+		{{- range $_, $v := .DebugPorts }}
+      - {{ print $v ":" $v | quote }}
 		{{- end }}
 `
 const couldNotWriteFileMessage = "could not write file:"

@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	"github.com/RobDoan/go-docker-template/pkg/engine"
+	"github.com/RobDoan/go-docker-template/pkg/jobs"
 )
 
 type Config struct {
@@ -34,10 +36,26 @@ func configParse() Config {
 //		fmt.Println(dir)
 //	}
 func main() {
+	// command := "docker-compose"
+	// args := []string{"run", "-it", "--rm", "container", "/bin/bash"}
+
+	// // Create a new command and attach it to the standard input/output
+	// cmd := exec.Command(command, args...)
+	// cmd.Stdin = os.Stdin
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+
+	// // Run the command
+	// if err := cmd.Run(); err != nil {
+	// 	fmt.Println("Error running command:", err)
+	// }
 	// config := configParse()
-	// startServiceOption := services.NewStartOptions([]string{"bishop"}, "qa2",
-	// 	"https://vault11.raven.k8s.payfare.com", "paidapp_us", "us")
-	// startServiceOption.CreateServiceEnv("bishop")
+	jobs.GetJob("gibson")
+	return
+	startServiceOption := engine.NewBuildOptions([]string{"bishop"}, "qa2",
+		"https://vault11.raven.k8s.payfare.com", "paidapp_us", "us", os.Args[1])
+	startServiceOption.Build()
+
 	// file := filepath.Join(os.Args[1], "docker-compose.yaml")
 	// b, err := os.ReadFile(file)
 	// if err != nil {
@@ -54,6 +72,6 @@ func main() {
 	// subfolders, _ := utils.ListSubfolders(os.Args[1])
 	// log.Printf("subfolders: %v", subfolders)
 	// services.Create(os.Args[1])
-	engine := engine.NewEngine()
-	engine.Render()
+	// engine := engine.NewEngine()
+	// engine.Render()
 }

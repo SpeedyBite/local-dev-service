@@ -49,7 +49,7 @@ func ReadYamlFile(yamlFile string, out interface{}) error {
 		return err
 	}
 
-	if err := yaml.Unmarshal(b, &out); err != nil {
+	if err := yaml.Unmarshal(b, out); err != nil {
 		log.Fatal("Unable to unmarshal docker-compose file: ", err)
 	}
 	return nil
