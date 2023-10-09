@@ -29,7 +29,6 @@ func findContainerName(service string) (string, error) {
 
 	// Unmarshal the JSON data into the struct
 	err = json.Unmarshal(output, &data)
-	log.Println(string(output))
 	if err != nil {
 		fmt.Println("Error parsing JSON:", err)
 		return "", err
@@ -53,16 +52,16 @@ func findContainerName(service string) (string, error) {
 	return container.ContainerName, nil
 }
 
-func Run(job Job, service string, port string) error {
+func Run(job Job, service string, port int) error {
 	containerName, err := findContainerName(service)
 	if err != nil {
 		return err
 	}
 
 	commands := []string{
-		// "cd /srv/root",
-		// "pip install --upgrade debugpy",
-		fmt.Sprintf("python3 -m debugpy --listen --wait-for-client 0.0.0.0:%s %s", port, job.command()),
+		"cd /srv/root",
+		"pip install --upgrade debugpy",
+		fmt.Sprintf("python3 -m debugpy --wait-for-client --listen 0.0.0.0:%d %s", port, job.command()),
 	}
 	cmdStr := strings.Join(commands, " && ")
 	cmd := exec.Command("docker", "exec", "-it", containerName, "bash", "-c", cmdStr)

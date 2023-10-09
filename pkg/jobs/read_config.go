@@ -33,6 +33,7 @@ func readAstroFile(dir string) (*[]Job, error) {
 	}
 
 	jobs := []Job{}
+	appendJobs := map[string]bool{}
 
 	for _, instance := range astroConfig.Instances {
 
@@ -40,7 +41,12 @@ func readAstroFile(dir string) (*[]Job, error) {
 			if len(container.Args) <= 0 {
 				continue
 			}
+			if _, ok := appendJobs[instance.Name]; ok {
+				continue
+			}
+
 			name := instance.Name
+			appendJobs[name] = true
 			job := Job{
 				Name: name,
 				Args: container.Args,

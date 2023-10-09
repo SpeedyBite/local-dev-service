@@ -60,17 +60,16 @@ func SelectAJob(serviceName string) (Job, error) {
 	selectedIndex, err := tui.SelectList(jobSelectOptions, "Select a job to run")
 
 	if err != nil {
-		utils.PrintError("Unable to select job")
 		log.Fatal(err)
 		return Job{}, err
 	}
 
-	if selectedIndex+1 > len(jobSelectOptions) {
-		utils.PrintError("No job to selected or selected job is invalid")
+	if selectedIndex < 0 || selectedIndex+1 > len(jobSelectOptions) {
+		log.Fatal(errors.New("No job to selected or selected job is invalid"))
 		return Job{}, errors.New("No job to selected or selected job is invalid")
 	}
 
-	fmt.Printf("Selected job: %s", jobSelectOptions[selectedIndex].Title())
+	utils.PrintInfo(fmt.Sprintf("Selected job: %s", jobSelectOptions[selectedIndex].Title()))
 
 	return (*jobs)[selectedIndex], nil
 }

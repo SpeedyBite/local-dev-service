@@ -1,11 +1,13 @@
 package tui
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pkg/errors"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -21,10 +23,11 @@ type item struct {
 
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.Title() }
+func (i item) FilterValue() string { return fmt.Sprintf("%s %s", i.title, i.desc) }
 
 type model struct {
-	list list.Model
+	list           list.Model
+	selectedChanel chan<- string
 }
 
 func (m model) Init() tea.Cmd {
@@ -34,9 +37,15 @@ func (m model) Init() tea.Cmd {
 func (m model) processTeaMessage(msg tea.KeyMsg) tea.Cmd {
 	switch msg.String() {
 	case "ctrl+c", "q":
+		close(m.selectedChanel)
 		return tea.Quit
 	case "enter":
 		if m.list.SelectedItem() != nil {
+			title := m.list.SelectedItem().(item).Title()
+			go func() {
+				defer close(m.selectedChanel)
+				m.selectedChanel <- title
+			}()
 			return tea.Quit
 		}
 	}
@@ -64,8 +73,6 @@ func (m model) View() string {
 	return docStyle.Render(m.list.View())
 }
 
-type OnSelected func(selectedIndex int) (int, error)
-
 func SelectList(
 	options []Option,
 	title string) (int, error) {
@@ -77,9 +84,12 @@ func SelectList(
 			desc:  option.Description(),
 		}
 	}
+	ch := make(chan string)
 
+	selectedTitle := ""
 	m := model{
-		list: list.New(items, list.NewDefaultDelegate(), 0, 0),
+		list:           list.New(items, list.NewDefaultDelegate(), 0, 0),
+		selectedChanel: ch,
 	}
 	m.list.Title = title
 
@@ -89,5 +99,17 @@ func SelectList(
 		log.Fatal(err)
 		return -1, err
 	}
-	return m.list.Index(), nil
+
+	selectedTitle, ok := <-ch
+	if !ok {
+		return -1, errors.Errorf("no option selected")
+	}
+	selectedIndex := 0
+	for i, option := range options {
+		if option.Title() == selectedTitle {
+			selectedIndex = i
+			break
+		}
+	}
+	return selectedIndex, nil
 }

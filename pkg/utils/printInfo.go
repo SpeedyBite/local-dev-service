@@ -12,11 +12,11 @@ var (
 )
 
 func PrintError(s string) {
-	str := fmt.Sprintf("%s %s", "[Error]", s)
+	str := fmt.Sprintf("%s %s \n", "[Error]", s)
 	fmt.Println(errorStyle.Render(str))
 }
 
 func PrintInfo(s string) {
-	str := fmt.Sprintf("%s %s", "[Info]", s)
+	str := fmt.Sprintf("%s %s \n", "[Info]", s)
 	fmt.Println(infoStyle.Render(str))
 }
