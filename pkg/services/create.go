@@ -27,7 +27,7 @@ const (
 )
 
 const defaultServiceHelperTemplate = `
-{{- define "gibson.environment" -}}
+{{- define "<SERVICENAME>.environment" -}}
 {{- range $k, $v := .Environment }}
 {{ print "- " $k "=" $v | indent 6}}
 {{- end -}}
@@ -38,8 +38,16 @@ const defaultServiceTemplate = `
 version: "3.7"
 services:
   {{ .Name }}:
+	  image: <SERVICENAME>_local
+		build:
+			context: .
+			dockerfile: Dockerfile.PayfareLabs
+			build-args:
+				- AWS_ACCOUNT_ID=860848273567
     enviroment:
-      {{- template "gibson.environment" .}}
+      {{- template "<SERVICENAME>.environment" .}}
+		entrypoint:
+			- /bin/bash
     ports:
 		{{- range $_, $v := .DebugPorts }}
       - {{ print $v ":" $v | quote }}

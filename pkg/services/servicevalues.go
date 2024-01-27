@@ -111,18 +111,6 @@ func (s *ServiceValues) getDebugPorts() map[string]int {
 	return config
 }
 
-// func (s *ServiceValues) isRequiredDatabase() bool {
-// 	return arrayutils.Some(s.Links, func(link string) bool { return link == "mysql" })
-// }
-
-// func (s *ServiceValues) isRequiredRedis() bool {
-// 	return arrayutils.Some(s.Links, func(link string) bool { return link == "redis" })
-// }
-
-// func (s *ServiceValues) isRequiredRabbitMQ() bool {
-// 	return arrayutils.Some(s.Links, func(link string) bool { return link == "rabbitmq" })
-// }
-
 func ReadServiceValue(dir string, service string) (ServiceValues, error) {
 	valueFile := filepath.Join(dir, service, "values.yaml")
 	utils.PrintInfo(fmt.Sprintf("Reading values.yaml file: %s", valueFile))

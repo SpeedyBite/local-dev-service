@@ -72,5 +72,4 @@ func updateEnvironmentVariables(environmentData *map[string]interface{}, channel
 	(*environmentData)[fmt.Sprintf("%s_%s", strings.ToUpper(channel), "DB_WRITE_USERNAME")] = dbConfig.User
 	(*environmentData)[fmt.Sprintf("%s_%s", strings.ToUpper(channel), "DB_READ_PASSWORD")] = dbConfig.Password
 	(*environmentData)[fmt.Sprintf("%s_%s", strings.ToUpper(channel), "DB_WRITE_PASSWORD")] = dbConfig.Password
-
 }
